@@ -15,6 +15,16 @@ Cobertura funcional: cupos/cancelación, aislamiento de clientes, versión de co
 CRUD de productos y gastos, BCrypt-SHA256, CSRF de sesión, JWT inválido/vencido/inactivo, rotación,
 revocación, CORS, paginación y throttling.
 
-No se ejecutaron pruebas de carga, concurrencia real en PostgreSQL ni certificación de seguridad.
-La prueba pública del alojamiento y el flujo completo desde navegador quedan sujetos a la publicación.
-El respaldo local `db.pre_ev3.sqlite3` se conserva fuera del paquete y del repositorio.
+## Verificación de producción
+
+- Repositorio GitHub publicado correctamente.
+- Render creó el Web Service `delicias-backend-ev3`.
+- PostgreSQL `delicias-ev3-db` quedó disponible.
+- Build de producción completado correctamente.
+- 166 archivos estáticos recopilados durante el despliegue.
+- Migraciones de `auth`, `sessions`, `shop` y `token_blacklist` aplicadas correctamente.
+- El servicio quedó en estado `live`.
+- URL pública:
+  https://delicias-backend-ev3.onrender.com
+
+La validación local final volvió a completar 33 pruebas correctamente y `makemigrations --check --dry-run` no detectó cambios pendientes.

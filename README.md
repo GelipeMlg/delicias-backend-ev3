@@ -1,6 +1,6 @@
 # Delicias de Mamá - Evaluación 3 Backend
 
-**Integrantes:** Jafet Lavados y Matias Otero. INACAP Punta Arenas, Backend.
+**Integrantes:** Felipe Alvarado, Jafet Lavados y Matias Otero. INACAP Punta Arenas, Backend.
 
 Django REST Framework para catálogo, reservas, cotizaciones, agenda y finanzas.
 Proyecto independiente de Android y Supabase: sus usuarios y base de datos son propios.

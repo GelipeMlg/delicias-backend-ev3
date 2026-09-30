@@ -11,10 +11,15 @@ Núcleo: User, Product, Day y Order; relaciones adicionales con Sale, Expense y 
 El detalle de comandos está en README.md y los resultados en VERIFICACION.md.
 Informe máximo cuatro páginas en output/pdf/Informe_EV3_Backend.pdf.
 
-## Condiciones todavía por comprobar externamente
+## Estado final
 
-- Repositorio GitHub con los archivos efectivamente subidos y acceso para el docente.
-- URL pública funcionando y flujo cliente-dueña probado en el alojamiento.
-- Agregar enlaces reales a la entrega de intranet, sin claves ni credenciales públicas.
+- Repositorio GitHub publicado:
+  https://github.com/GelipeMlg/delicias-backend-ev3
+- Backend desplegado públicamente en Render:
+  https://delicias-backend-ev3.onrender.com
+- PostgreSQL de producción creado y disponible en Render.
+- Build, collectstatic y migraciones ejecutadas correctamente durante el despliegue.
+- Servicio verificado en estado `live`.
+- No se publicaron claves, credenciales ni archivos `.env`.
 
 La matriz relaciona evidencias con la pauta; no garantiza una nota ni reemplaza la evaluación docente.
