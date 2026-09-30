@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: delicias-backend-ev3
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-lock.txt && python manage.py collectstatic --noinput
+    startCommand: python scripts/start_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DJANGO_TRUST_PROXY
+        value: "1"
+      - key: BIND_HOST
+        value: 0.0.0.0
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: delicias-ev3-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: delicias-ev3-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: delicias-ev3-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: delicias-ev3-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: delicias-ev3-db
+          property: port
+      - key: POSTGRES_SSLMODE
+        value: require
+databases:
+  - name: delicias-ev3-db
+    plan: free

@@ -1,0 +1,15 @@
+{% extends "rest_framework/base.html" %}
+{% load static %}
+{% block title %}{{ name }} · Delicias de Mamá{% endblock %}
+{% block style %}{{ block.super }}<link rel="stylesheet" href="{% static 'delicias.css' %}">{% endblock %}
+{% block branding %}<a class="navbar-brand" href="/"><img src="{% static 'logo_delicias_mama.jpg' %}" alt="">Delicias de Mamá</a>{% endblock %}
+{% block content %}
+<nav class="module-nav" aria-label="Secciones de la API">
+<a href="/api/">Inicio API</a><a href="/api/products/">Productos</a><a href="/api/days/">Agenda</a>
+{% if user.is_authenticated %}<a href="/api/orders/">Pedidos</a>{% endif %}
+{% if user.is_superuser %}<a href="/api/sales/">Ventas</a><a href="/api/expenses/">Gastos</a><a href="/api/summary/">Resumen</a><a href="/api/audit/">Historial</a>{% endif %}
+</nav>
+<section class="api-intro" aria-label="Guía de uso"><p class="eyebrow">{% if user.is_superuser %}Panel de la dueña{% elif user.is_authenticated %}Área del cliente{% else %}Consulta pública{% endif %}</p>
+<p>Consulta los resultados y utiliza los formularios al final de la página para enviar cambios.</p>
+<p>{% if not user.is_authenticated %}<a href="/api-auth/login/?next={{ request.path|urlencode }}">Inicia sesión</a> para acceder a tus operaciones.{% else %}Sesión de <strong>{{ user.username }}</strong>. Importes en pesos chilenos (CLP).{% endif %}</p></section>
+{{ block.super }}{% endblock %}

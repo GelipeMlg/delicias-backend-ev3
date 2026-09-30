@@ -1,0 +1,81 @@
+"""Genera el informe académico (requiere reportlab, separado del servidor)."""
+from pathlib import Path
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+
+root = Path(__file__).resolve().parent.parent
+output = root / 'output' / 'pdf'
+output.mkdir(parents=True, exist_ok=True)
+styles = getSampleStyleSheet()
+styles.add(ParagraphStyle(name='BodyEV', fontName='Helvetica', fontSize=10, leading=14, spaceAfter=8, textColor=colors.HexColor('#302d34')))
+styles.add(ParagraphStyle(name='TitleEV', fontName='Helvetica-Bold', fontSize=26, leading=30, spaceAfter=16, textColor=colors.HexColor('#803f51')))
+styles.add(ParagraphStyle(name='HeadEV', fontName='Helvetica-Bold', fontSize=14, leading=18, spaceBefore=10, spaceAfter=8, textColor=colors.HexColor('#803f51')))
+styles.add(ParagraphStyle(name='SmallEV', fontSize=8.5, leading=12, spaceAfter=6))
+story=[]
+def p(text, style='BodyEV'): story.append(Paragraph(text, styles[style]))
+def h(text): p(text,'HeadEV')
+def table(rows, widths):
+    cells=[[Paragraph(str(cell),styles['SmallEV']) for cell in row] for row in rows]
+    t=Table(cells,colWidths=widths,hAlign='LEFT')
+    t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#f1dfe4')),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),8),('RIGHTPADDING',(0,0),(-1,-1),8),('TOPPADDING',(0,0),(-1,-1),7),('BOTTOMPADDING',(0,0),(-1,-1),7),('LINEBELOW',(0,0),(-1,-1),.4,colors.HexColor('#e3d8dc'))]))
+    story.append(t); story.append(Spacer(1,10))
+def page(): story.append(PageBreak())
+def footer(canvas, doc):
+    canvas.setStrokeColor(colors.HexColor('#d8bec6')); canvas.line(44,44,551,44)
+    canvas.setFont('Helvetica',8); canvas.setFillColor(colors.HexColor('#68616a'))
+    canvas.drawString(44,31,'INACAP | Backend | Delicias de Mamá | 30 de septiembre de 2026')
+    canvas.drawRightString(551,31,f'{doc.page} / 4')
+
+p('EVALUACIÓN 3 · BACKEND','SmallEV')
+p('Delicias de Mamá<br/>API REST y revisión con IA','TitleEV')
+p('<b>Jafet Lavados y Matias Otero</b><br/>Analista Programador · INACAP Punta Arenas<br/>Docente: Paulo Simunovic Oyarzun')
+h('1. Problema y alcance')
+p('La PYME necesita ordenar su catálogo, solicitudes, disponibilidad y registros financieros. La solución ofrece un backend Django REST Framework y un portal sencillo para que el cliente se registre, solicite un producto y acepte una cotización. La dueña administra catálogo y finanzas mediante la API navegable y la administración de Django.')
+p('Esta entrega es independiente de Android y Supabase. Usa SQLite en desarrollo y contempla PostgreSQL para alojamiento. El objetivo evaluado es la API: autenticación, permisos, JSON, validación y operaciones CRUD.')
+h('2. Dominio y relaciones')
+table([['Modelo','Responsabilidad y relación'],['Product','Catálogo, precio CLP y disponibilidad. Un producto tiene varios pedidos.'],['Day','Fecha, capacidad y bloqueo. Una fecha agrupa varios pedidos.'],['Order','Solicitud de un User para un Product y un Day (tres FK). Guarda estado, monto y versión de cotización.'],['Sale / Expense','Sale puede corresponder a un único Order (OneToOne). Expense puede asociarse a un Order (FK).'],['Audit','Registra actor User, acción, recurso y detalle; lectura exclusiva de la dueña.']],[112,395])
+p('<b>Núcleo:</b> User 1:N Order; Product 1:N Order; Day 1:N Order. Sale, Expense y Audit amplían ese núcleo. Se conservan referencias con PROTECT y se retiran productos o anulan movimientos mediante borrado lógico.')
+h('3. Organización')
+p('config define ajustes y rutas; models define entidades; serializers transforma y valida JSON; views y auth_views exponen recursos; services concentra reglas y transacciones. static y templates forman el portal. La API versionada comienza en /api/v1/.', 'BodyEV')
+page()
+p('Autenticación y autorización','TitleEV')
+h('4. Consulta de seguridad con IA 1')
+p('<b>Prompt aplicado:</b> «Audita el registro, el login y los permisos de esta API para impedir que un cliente se convierta en dueña o acceda a pedidos ajenos».')
+p('<b>Respuesta resumida de Codex:</b> el filtrado de pedidos por usuario ya existía. Era necesario añadir autenticación de API por tokens, limitar credenciales inválidas y comprobar que el registro no acepte campos administrativos.')
+p('<b>Decisión crítica:</b> se incorporó SimpleJWT, en lugar de programar firmas propias. El registro usa create_user y solo acepta username, email y password. La dueña es un superusuario activo; ese rol nunca se asigna desde el registro público. El permiso de cada operación y el filtrado de objetos siguen siendo necesarios aunque el JWT sea válido.')
+table([['Control aplicado','Evidencia verificable'],['Contraseña','BCrypt-SHA256 y validadores Django; mínimo 12 caracteres. Es un hash, no cifrado reversible.'],['JWT','Access de 5 minutos; refresh de 1 día; renovación con rotación y blacklist. Logout revoca el refresh propio.'],['Aislamiento','El servidor asigna el usuario del pedido. Un cliente no consulta ni cancela pedidos ajenos.'],['Roles','Solo dueña escribe catálogo, configura cupos, cotiza, entrega y administra finanzas.']],[145,362])
+h('5. Verificación y limitaciones')
+p('Las pruebas rechazan JWT vencidos o falsificados, usuarios inactivos, credenciales incorrectas y refresh de otra cuenta. Comprueban la revocación y el rechazo del refresh anterior después de renovar. También prueban la imposibilidad de elevar privilegios desde el registro.')
+p('El access ya emitido puede seguir vigente hasta cinco minutos tras logout. La sesión tradicional conserva CSRF; no se desactiva para facilitar formularios. En esta entrega la dueña tiene permisos administrativos amplios: en una operación real se recomienda un grupo limitado y MFA.')
+h('Método de trabajo con IA')
+p('Las tres consultas transcritas corresponden a revisiones estructuradas formuladas y respondidas por Codex durante la implementación solicitada por el equipo, el 30-09-2026. No se presentan como tres mensajes escritos por los alumnos ni como una auditoría externa. AUDITORIA_IA.md relaciona recomendaciones, decisiones, archivos y pruebas.', 'SmallEV')
+page()
+p('JSON, CRUD y reglas de negocio','TitleEV')
+h('6. Consulta de seguridad con IA 2')
+p('<b>Prompt aplicado:</b> «Revisa los serializadores y el CRUD: entradas inválidas, inyección SQL, manipulación de campos protegidos y acceso a objetos de otro usuario».')
+p('<b>Respuesta resumida:</b> mantener el ORM para evitar concatenación de SQL, validar las solicitudes y demostrar los métodos HTTP con pruebas. El titular, estado y cotización del pedido no deben ser editables por el cliente.')
+p('<b>Decisión crítica:</b> se usa ModelSerializer y validaciones explícitas de fecha y producto activo. Las reglas se verifican también dentro de transacciones para proteger los cupos. Se descartó borrar caracteres arbitrariamente de entradas: una búsqueda con sintaxis SQL se trata como texto. El portal muestra datos mediante textContent.')
+table([['Operación','Resultado esperado'],['GET /api/v1/products/','200; JSON paginado, 30 por página; búsqueda y ordenamiento.'],['POST /api/v1/products/','201 para dueña; 401 anónimo; 403 cliente.'],['PUT o PATCH products/{id}/','200; validación de campos y precio.'],['DELETE products/{id}/','204; se retira del catálogo y conserva historial.'],['CRUD /api/v1/expenses/','GET, POST, PUT, PATCH y DELETE; solo dueña; anulación lógica.'],['Entradas y objetos','400 datos inválidos; 404 objeto no visible; 429 límite de peticiones.']],[220,287])
+h('7. Refactorización y consistencia')
+p('Se añadieron rutas /api/v1/ sin quitar los alias anteriores y un manejador común de errores DRF: error.status, error.code y error.details. Se eliminó el registro duplicado en views para centralizar límites y validación. Se comparten permisos y operaciones financieras para evitar divergencias.')
+p('Los pedidos cambian mediante acciones quote, confirm, cancel y deliver. Una corrección de cotización incrementa su versión y obliga a aceptarla de nuevo. Entregar genera una sola venta. Una cancelación libera cupo. Se evitó un PUT libre sobre el estado porque permitiría saltarse estas reglas.')
+p('<b>Evidencia:</b> pruebas de CRUD completo, JSON mal formado, precio inválido, búsqueda SQL como texto, inyección de campos protegidos, reserva sin cupo y entrega única. Son casos concretos; no certifican ausencia de todas las vulnerabilidades.', 'SmallEV')
+page()
+p('Producción y resultados','TitleEV')
+h('8. Consulta de seguridad con IA 3')
+p('<b>Prompt aplicado:</b> «Revisa la configuración de producción: secretos, CORS, HTTPS y límites de peticiones».')
+p('<b>Respuesta resumida:</b> separar secretos del código, restringir CORS, exigir HTTPS y agregar límites específicos de autenticación. Se aplicaron .env.example, carga de entorno, hosts explícitos y cache de throttling en base de datos.')
+p('<b>Decisión crítica:</b> portal y API comparten origen; no se habilita CORS universal. Se ignora X-Forwarded-For no confiable. DRF ofrece límites aproximados, no una defensa integral contra fuerza bruta o DoS. El login de sesión/admin necesita protección adicional. HSTS se limita al host, sin preload ni extensión a subdominios que el equipo no controla.')
+h('9. Evidencia de ejecución local')
+table([['Comprobación','Resultado del 30-09-2026'],['Suite Django (SQLite temporal)','33 pruebas aprobadas en 6,861 segundos. Sin errores de sistema.'],['Migraciones de modelos','makemigrations --check --dry-run: sin cambios pendientes.'],['Producción aislada','check --deploy: sin errores; W005 y W021 por decisiones HSTS documentadas.'],['HTTP real con Waitress','Portada, catálogo, sesión, logo y JavaScript: 200. Finanzas anónimas: 401.'],['Portal','Catálogo cargado desde API y diseño revisado en navegador; sintaxis JavaScript validada.']],[205,302])
+h('10. Entrega y trabajo pendiente')
+p('Se incluyen código, migraciones, dependencias fijadas, .env.example sin claves, README, bitácora, pruebas y configuración Render con PostgreSQL. La carpeta .venv y las bases reales no se distribuyen. GitHub alojará el código y Render ejecutará Django con Waitress/WhiteNoise.')
+p('<b>Estado al generar este informe:</b> verificación local completada; publicación y prueba desde URL pública pendientes. Deben registrarse los enlaces reales y comprobarse el flujo cliente-dueña antes de presentar la entrega. No se atribuye a pruebas SQLite una validación de concurrencia en PostgreSQL.')
+h('Referencias técnicas')
+p('Django: docs.djangoproject.com/en/5.2/howto/deployment/checklist/<br/>DRF: django-rest-framework.org/api-guide/permissions/ y /throttling/<br/>SimpleJWT: django-rest-framework-simplejwt.readthedocs.io/en/stable/blacklist_app.html<br/>Render: render.com/docs/free (servicio gratuito para demostración; PostgreSQL expira a los 30 días).', 'SmallEV')
+doc=SimpleDocTemplate(str(output/'Informe_EV3_Backend.pdf'),pagesize=A4,rightMargin=44,leftMargin=44,topMargin=43,bottomMargin=56,title='Evaluación 3 Backend - Delicias de Mamá',author='Jafet Lavados y Matias Otero')
+doc.build(story,onFirstPage=footer,onLaterPages=footer)
+print(output/'Informe_EV3_Backend.pdf')

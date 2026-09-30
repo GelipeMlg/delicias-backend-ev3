@@ -1,0 +1,10 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Delicias de Mamá</title><link rel="stylesheet" href="{% static 'delicias.css' %}"></head>
+<body><main class="home-shell"><header class="hero"><img src="{% static 'logo_delicias_mama.jpg' %}" alt="Logo Delicias de Mamá"><div><p>Hecho con cariño, para compartir</p><h1>Todo en su lugar</h1><p>Productos, pedidos y cuentas de tu negocio.</p></div></header>
+<nav class="module-nav" aria-label="Cuenta"><a href="/api/">Abrir API</a>{% if user.is_authenticated %}<a href="/api/session/">Mi sesión</a>{% else %}<a href="/api-auth/login/?next=/api/">Iniciar sesión</a>{% endif %}{% if user.is_superuser %}<a href="/admin/">Administración</a>{% endif %}</nav>
+<section class="cards" aria-label="Módulos">
+<a class="module-card" href="/api/products/"><h2>Productos</h2><p>Consulta el catálogo y los precios de nuestras preparaciones.</p><span>Ver catálogo →</span></a>
+<a class="module-card" href="/api/days/"><h2>Agenda</h2><p>Revisa las fechas configuradas y la capacidad disponible.</p><span>Consultar agenda →</span></a>
+<a class="module-card" href="{% if user.is_authenticated %}/api/orders/{% else %}/api-auth/login/?next=/api/orders/{% endif %}"><h2>Pedidos</h2><p>Solicitudes, cotizaciones y seguimiento de cada encargo.</p><span>Ver pedidos →</span></a>
+{% if user.is_superuser %}<a class="module-card" href="/api/sales/"><h2>Ventas</h2><p>Consulta y corrige los ingresos registrados.</p><span>Gestionar ventas →</span></a><a class="module-card" href="/api/expenses/"><h2>Gastos</h2><p>Organiza insumos y costos del negocio.</p><span>Gestionar gastos →</span></a><a class="module-card" href="/api/summary/"><h2>Resumen</h2><p>Ventas menos gastos, sin movimientos anulados.</p><span>Ver resumen →</span></a>{% endif %}
+</section><footer class="home-footer">Delicias de Mamá · Gestión del negocio</footer></main></body></html>

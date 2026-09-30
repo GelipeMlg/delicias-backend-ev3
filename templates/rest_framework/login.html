@@ -1,0 +1,5 @@
+{% extends "rest_framework/login_base.html" %}
+{% load static %}
+{% block title %}Iniciar sesión · Delicias de Mamá{% endblock %}
+{% block style %}{{ block.super }}<link rel="stylesheet" href="{% static 'delicias.css' %}">{% endblock %}
+{% block branding %}<img class="login-logo" src="{% static 'logo_delicias_mama.jpg' %}" alt="Delicias de Mamá"><h3>Bienvenida a Delicias de Mamá</h3><p>Ingresa con tu nombre de usuario y contraseña.</p>{% endblock %}
