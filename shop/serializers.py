@@ -55,10 +55,58 @@ class DaySerializer(SpanishLabels, serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     date = serializers.DateField(source='day_id', read_only=True)
+
+    detail_url = serializers.SerializerMethodField()
+    quote_url = serializers.SerializerMethodField()
+    confirm_url = serializers.SerializerMethodField()
+    cancel_url = serializers.SerializerMethodField()
+    deliver_url = serializers.SerializerMethodField()
+
+    def _url(self, obj, action=None):
+        base = f'/api/v1/orders/{obj.pk}/'
+        return base if action is None else f'{base}{action}/'
+
+    def get_detail_url(self, obj):
+        return self._url(obj)
+
+    def get_quote_url(self, obj):
+        return self._url(obj, 'quote')
+
+    def get_confirm_url(self, obj):
+        return self._url(obj, 'confirm')
+
+    def get_cancel_url(self, obj):
+        return self._url(obj, 'cancel')
+
+    def get_deliver_url(self, obj):
+        return self._url(obj, 'deliver')
+
     class Meta:
         model = Order
-        fields = ['id','user','customer','contact','product','product_name','quantity','date','time',
-                  'flavor','filling','theme','restrictions','status','quote','quote_version','created_at']
+        fields = [
+            'id',
+            'user',
+            'customer',
+            'contact',
+            'product',
+            'product_name',
+            'quantity',
+            'date',
+            'time',
+            'flavor',
+            'filling',
+            'theme',
+            'restrictions',
+            'status',
+            'quote',
+            'quote_version',
+            'created_at',
+            'detail_url',
+            'quote_url',
+            'confirm_url',
+            'cancel_url',
+            'deliver_url',
+        ]
         read_only_fields = fields
 
 class ReserveSerializer(SpanishLabels, serializers.ModelSerializer):
