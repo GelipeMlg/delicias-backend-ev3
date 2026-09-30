@@ -6,6 +6,10 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 os.chdir(root)
+
 for command in [('migrate', '--noinput'), ('createcachetable',)]:
     subprocess.run([sys.executable, 'manage.py', *command], check=True)
+
+subprocess.run([sys.executable, 'manage.py', 'seed_demo'], check=True)
+
 os.execv(sys.executable, [sys.executable, 'serve.py'])
