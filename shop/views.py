@@ -79,40 +79,143 @@ class DayViewSet(PresentationMixin, viewsets.ReadOnlyModelViewSet):
         return Response(DaySerializer(day).data if day else {'date':date,'capacity':3,'blocked':False,'used':0,'available':3})
 
 class OrderViewSet(PresentationMixin, viewsets.ReadOnlyModelViewSet):
-    """Consulta tus pedidos o envía una solicitud con el formulario. Abre el detalle de un pedido para cotizar, confirmar, cancelar o registrar su entrega según tus permisos."""
+    """Consulta tus pedidos o envía una solicitud con el formulario.
+    Abre el detalle de un pedido para cotizar, confirmar, cancelar
+    o registrar su entrega según tus permisos.
+    """
+
     section = 'Pedidos'
     serializer_class = OrderSerializer
+
     def get_serializer_class(self):
-        return {'create':ReserveSerializer,'quote':QuoteSerializer,'confirm':ConfirmSerializer,
-                'cancel':serializers.Serializer,'deliver':serializers.Serializer}.get(self.action,OrderSerializer)
+        return {
+            'create': ReserveSerializer,
+            'quote': QuoteSerializer,
+            'confirm': ConfirmSerializer,
+            'cancel': serializers.Serializer,
+            'deliver': serializers.Serializer,
+        }.get(self.action, OrderSerializer)
+
     def get_queryset(self):
-        qs = Order.objects.select_related('day','product')
-        return qs if services.owner(self.request.user) else qs.filter(user=self.request.user)
-    def create(self,request):
+        qs = Order.objects.select_related('day', 'product')
+        return qs if services.owner(self.request.user) else qs.filter(
+            user=self.request.user
+        )
+
+    def create(self, request):
         serializer = ReserveSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        order = services.reserve(request.user,serializer.validated_data)
-        return Response(dict(OrderSerializer(order).data),status=201)
-    @action(detail=True,methods=['post'],permission_classes=[OwnerOnly])
-    def quote(self,request,pk=None):
-        """Escribe el monto total. Corregir una cotización exige que el cliente acepte la nueva versión."""
+
+        order = services.reserve(
+            request.user,
+            serializer.validated_data
+        )
+
+        return Response(
+            dict(
+                OrderSerializer(
+                    order,
+                    context={'request': request}
+                ).data
+            ),
+            status=201
+        )
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[OwnerOnly]
+    )
+    def quote(self, request, pk=None):
+        """Escribe el monto total. Corregir una cotización exige
+        que el cliente acepte la nueva versión.
+        """
+
         order = self.get_object()
+
         data = QuoteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        return Response(dict(OrderSerializer(services.transition(request.user,order.pk,'quote',**data.validated_data)).data))
-    @action(detail=True,methods=['post'])
-    def confirm(self,request,pk=None):
-        """Indica la quote_version que aparece en el pedido para aceptar exactamente esa cotización."""
+
+        updated_order = services.transition(
+            request.user,
+            order.pk,
+            'quote',
+            **data.validated_data
+        )
+
+        return Response(
+            dict(
+                OrderSerializer(
+                    updated_order,
+                    context={'request': request}
+                ).data
+            )
+        )
+
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        """Indica la quote_version que aparece en el pedido
+        para aceptar exactamente esa cotización.
+        """
+
         order = self.get_object()
+
         data = ConfirmSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        return Response(dict(OrderSerializer(services.transition(request.user,order.pk,'confirm',**data.validated_data)).data))
-    @action(detail=True,methods=['post'])
-    def cancel(self,request,pk=None):
-        return Response(dict(OrderSerializer(services.transition(request.user,self.get_object().pk,'cancel')).data))
-    @action(detail=True,methods=['post'],permission_classes=[OwnerOnly])
-    def deliver(self,request,pk=None):
-        return Response(dict(OrderSerializer(services.transition(request.user,self.get_object().pk,'deliver')).data))
+
+        updated_order = services.transition(
+            request.user,
+            order.pk,
+            'confirm',
+            **data.validated_data
+        )
+
+        return Response(
+            dict(
+                OrderSerializer(
+                    updated_order,
+                    context={'request': request}
+                ).data
+            )
+        )
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        updated_order = services.transition(
+            request.user,
+            self.get_object().pk,
+            'cancel'
+        )
+
+        return Response(
+            dict(
+                OrderSerializer(
+                    updated_order,
+                    context={'request': request}
+                ).data
+            )
+        )
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[OwnerOnly]
+    )
+    def deliver(self, request, pk=None):
+        updated_order = services.transition(
+            request.user,
+            self.get_object().pk,
+            'deliver'
+        )
+
+        return Response(
+            dict(
+                OrderSerializer(
+                    updated_order,
+                    context={'request': request}
+                ).data
+            )
+        )
 
 class FinanceViewSet(PresentationMixin, viewsets.ModelViewSet):
     """Registra o corrige un movimiento. DELETE lo anula sin borrar su historial; los anulados no se incluyen en el resumen financiero."""

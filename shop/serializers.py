@@ -56,30 +56,21 @@ class DaySerializer(SpanishLabels, serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     date = serializers.DateField(source='day_id', read_only=True)
 
-    detail_url = serializers.SerializerMethodField()
-    quote_url = serializers.SerializerMethodField()
-    confirm_url = serializers.SerializerMethodField()
-    cancel_url = serializers.SerializerMethodField()
-    deliver_url = serializers.SerializerMethodField()
-
-    def _url(self, obj, action=None):
-        base = f'/api/v1/orders/{obj.pk}/'
-        return base if action is None else f'{base}{action}/'
-
-    def get_detail_url(self, obj):
-        return self._url(obj)
-
-    def get_quote_url(self, obj):
-        return self._url(obj, 'quote')
-
-    def get_confirm_url(self, obj):
-        return self._url(obj, 'confirm')
-
-    def get_cancel_url(self, obj):
-        return self._url(obj, 'cancel')
-
-    def get_deliver_url(self, obj):
-        return self._url(obj, 'deliver')
+    detail_url = serializers.HyperlinkedIdentityField(
+        view_name='v1:order-detail'
+    )
+    quote_url = serializers.HyperlinkedIdentityField(
+        view_name='v1:order-quote'
+    )
+    confirm_url = serializers.HyperlinkedIdentityField(
+        view_name='v1:order-confirm'
+    )
+    cancel_url = serializers.HyperlinkedIdentityField(
+        view_name='v1:order-cancel'
+    )
+    deliver_url = serializers.HyperlinkedIdentityField(
+        view_name='v1:order-deliver'
+    )
 
     class Meta:
         model = Order
